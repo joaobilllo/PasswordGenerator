@@ -1,9 +1,12 @@
+
+// Importa pacotes necessários para UI e manipulação de clipboard
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/password_service.dart';
 
+
 /// Formulário principal do gerador de senhas.
-/// Organiza os campos, validação, seleção de algoritmo e exibe o resultado.
+/// Responsável por coletar dados do usuário, validar, chamar o serviço de geração e exibir o resultado.
 class PasswordForm extends StatefulWidget {
   const PasswordForm({Key? key}) : super(key: key);
 
@@ -11,11 +14,15 @@ class PasswordForm extends StatefulWidget {
   State<PasswordForm> createState() => _PasswordFormState();
 }
 
+
 class _PasswordFormState extends State<PasswordForm> {
+  // Chave do formulário para validação
   final _formKey = GlobalKey<FormState>();
+  // Controladores dos campos de texto
   final _serviceController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passphraseController = TextEditingController();
+  // Estado dos campos e opções
   double _length = 12;
   String _algorithm = 'SHA-256';
   String _result = '';
@@ -24,7 +31,8 @@ class _PasswordFormState extends State<PasswordForm> {
   bool _useNumbers = true;
   bool _useSymbols = false;
 
-  // Limpa controladores ao destruir widget
+
+  // Limpa controladores ao destruir widget para evitar vazamento de memória
   @override
   void dispose() {
     _serviceController.dispose();
@@ -33,7 +41,8 @@ class _PasswordFormState extends State<PasswordForm> {
     super.dispose();
   }
 
-  // Gera a senha usando o serviço
+
+  // Gera a senha usando o serviço PasswordService e atualiza o estado
   void _generate() {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -52,7 +61,8 @@ class _PasswordFormState extends State<PasswordForm> {
     }
   }
 
-  // Copia a senha para a área de transferência
+
+  // Copia a senha gerada para a área de transferência e exibe notificação
   void _copyToClipboard() {
     Clipboard.setData(ClipboardData(text: _result));
     setState(() => _copied = true);
@@ -60,7 +70,6 @@ class _PasswordFormState extends State<PasswordForm> {
       context,
     ).showSnackBar(const SnackBar(content: Text('Senha copiada!')));
   }
-
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -69,21 +78,21 @@ class _PasswordFormState extends State<PasswordForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Campo Serviço/Site
+            // Campo para o nome do serviço/site
             TextFormField(
               controller: _serviceController,
               decoration: const InputDecoration(labelText: 'Serviço/Site'),
               validator: (v) =>
                   v == null || v.isEmpty ? 'Campo obrigatório' : null,
             ),
-            // Campo opcional Nome de usuário
+            // Campo opcional para nome de usuário
             TextFormField(
               controller: _usernameController,
               decoration: const InputDecoration(
                 labelText: 'Nome de usuário (opcional)',
               ),
             ),
-            // Campo Frase-base
+            // Campo para frase-base secreta
             TextFormField(
               controller: _passphraseController,
               decoration: const InputDecoration(labelText: 'Frase-base'),
@@ -92,8 +101,8 @@ class _PasswordFormState extends State<PasswordForm> {
                   v == null || v.isEmpty ? 'Campo obrigatório' : null,
             ),
             const SizedBox(height: 16),
-            // Slider para comprimento
-            Text('Comprimento: ${_length.toInt()}'),
+            // Slider para selecionar o comprimento da senha
+            Text('Comprimento: [${_length.toInt()}'),
             Slider(
               min: 8,
               max: 32,
@@ -119,7 +128,7 @@ class _PasswordFormState extends State<PasswordForm> {
               value: _useSymbols,
               onChanged: (v) => setState(() => _useSymbols = v ?? false),
             ),
-            // Dropdown para algoritmo
+            // Dropdown para seleção do algoritmo de hash
             DropdownButtonFormField<String>(
               value: _algorithm,
               decoration: const InputDecoration(labelText: 'Algoritmo'),
@@ -131,13 +140,14 @@ class _PasswordFormState extends State<PasswordForm> {
               onChanged: (v) => setState(() => _algorithm = v!),
             ),
             const SizedBox(height: 12),
-            // Medidor simples de força: baseado no comprimento e diversidade de classes
+            // Medidor simples de força: baseado no comprimento e diversidade de classes de caracteres
             Builder(
               builder: (context) {
                 int classes = 1;
                 if (_useUppercase) classes++;
                 if (_useNumbers) classes++;
                 if (_useSymbols) classes++;
+                // Score simples: mistura comprimento e variedade de tipos de caracteres
                 final score = (_length / 32.0 * 0.6) + (classes / 4.0 * 0.4);
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,13 +160,13 @@ class _PasswordFormState extends State<PasswordForm> {
               },
             ),
             const SizedBox(height: 24),
-            // Botão de gerar senha
+            // Botão para gerar a senha
             ElevatedButton(
               onPressed: _generate,
               child: const Text('Gerar Senha'),
             ),
             const SizedBox(height: 24),
-            // Exibe resultado e botão de copiar
+            // Exibe resultado e botão de copiar caso haja senha gerada
             if (_result.isNotEmpty)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
